@@ -126,6 +126,32 @@
         b (str/split (second input) #",")]
     (shortest-combined-path a b)))
 
+;;
+; Day 4
+;;
+
+; SO
+(defn digits [number] (map #(Character/digit % 10) (str number)))
+; (defn has-twin [ll] true)
+
+(defn asc [ll] 
+  (let [asc-vals (map-indexed (fn [idx _itm] (if (< idx (- (count ll) 1)) (>= (nth ll (+ idx 1)) (nth ll idx)))) ll)]
+    (= (count (filter true? asc-vals)) 5)))
+
+(defn has-pair [ll] 
+  (let [asc-vals (map-indexed (fn [idx _itm] (if (< idx (- (count ll) 1)) (= (nth ll (+ idx 1)) (nth ll idx)))) ll)]
+    (>= (count (filter true? asc-vals)) 1)))
+
+(defn valid? [n]
+  (let [ll (digits n)]
+   (and (asc ll) (has-pair ll))))
+
+(defn crack-pass [low hi]
+  (let [ xs (filter valid? (range low hi))]
+    (count xs)))
+
+(defn day-4 [] (crack-pass 357253 892942))
+
 (defn -main
   "Advent of Code -- 2019 https://adventofcode.com/2019/"
   []
@@ -134,4 +160,5 @@
   (day-2)
   (day-3)
   (day-3-part-2)
+  (day-4)
 )
