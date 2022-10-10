@@ -46,3 +46,19 @@
       (is (false? (aoc/xpair? [3 5 7 7 7 7] 0)))
     )))
 
+(deftest test-day-6
+  (testing "Day 6"    
+    (let [test-data '[
+      "COM)B"
+      "B)C"
+      "C)D"
+      "D)E"
+      "E)F"
+      "B)G"
+      "G)H"
+      "D)I"
+      "E)J"
+      "J)K"
+      "K)L"
+    ]]
+     (is (= 42 (aoc/get-orbits test-data))))))
