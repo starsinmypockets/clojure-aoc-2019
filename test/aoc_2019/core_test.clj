@@ -48,7 +48,7 @@
 
 (deftest test-day-6
   (testing "Day 6"    
-    (let [test-data '[
+    (let [test-data-6 '[
       "COM)B"
       "B)C"
       "C)D"
@@ -61,4 +61,14 @@
       "J)K"
       "K)L"
     ]]
-     (is (= 42 (aoc/get-orbits test-data))))))
+     (is (= 42 (aoc/get-orbits test-data-6))))))
+
+(deftest test-day-8
+  (testing "Day 8"
+    (def test-data-8 "0222112222120000")
+      (is (= (aoc/get-day-8 test-data-8 2 2) 4))))
+
+(deftest test-day-8-2
+  (testing "Day 8 -- part 2"
+    (def test-data-8-2 "0222112222120000")
+      (is (= (aoc/get-day-8-2 test-data-8-2 2 2) '((1 0)(0 1))))))

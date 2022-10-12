@@ -26,7 +26,6 @@
 
 (defn day-1b []
   (let [data (mapv #(Integer/parseInt %) (read-file "src/inputs/day-1.txt"))]
-    (println (day-1b-get-fuel 1969 []))
     (reduce + (mapv #(day-1b-get-fuel % []) data))))
 
 ;;
@@ -218,10 +217,8 @@
         1))))
 
 (defn process-command-2 [ll i last-val]
-  (println ll i last-val)
   (let [code (reverse-num (ll i))
         opcode (Integer/parseInt (subs (str code) 0 1))]
-    (println [code opcode])
     (if (= opcode 4)
       (ll (ll (+ i 1)))
       (let [
@@ -234,7 +231,6 @@
                       [param mode value])) (range 0 p-count))
             result (do-op opcode params)
             next-start (+ i (count params) 1)]
-	    (println [(last (last params)) p-count params])
 	    (process-command-2 (assoc ll (last (last params)) result) next-start result)))))
 
 ;;
@@ -263,6 +259,130 @@
   (let [inputs (read-file "src/inputs/day-5.txt")]
     (get-orbits inputs)))
 
+;;
+; Day 6 -- Part 2
+;;
+
+(defn trace-orbits
+  "Count steps to reach universal center of mass"
+  [orbits ll]
+    (if (= ((nth ll 0) 0) "COM")
+      ll
+      (let [cur (filter #(= ((nth ll 0) 0) (nth %1 1)) orbits)
+            nxt-ll (reverse (into cur ll))]
+          nxt-ll
+          (trace-orbits orbits nxt-ll))))
+
+(def day-6-test-data-raw '[
+  "COM)B"
+  "B)C"
+  "C)D"
+  "D)E"
+  "E)F"
+  "B)G"
+  "G)H"
+  "D)I"
+  "E)J"
+  "J)K"
+  "K)L"
+])
+
+(def day-6-data (map #(clojure.string/split %1 #"\)") day-6-test-data-raw) )
+
+(defn day-6-2 []
+  (let [raw (read-file "src/inputs/day-5.txt")
+        inputs (map #(clojure.string/split %1 #"\)") raw)
+        you (filter #(= (%1 1) "YOU") inputs)
+        san (filter #(= (%1 1) "SAN") inputs)
+        orbit-a (trace-orbits inputs you)
+        orbit-b (trace-orbits inputs san)
+        uniq-a (- (count (drop-while #(>= (.indexOf orbit-b %) 0) orbit-a)) 1)
+        uniq-b (- (count (drop-while #(>= (.indexOf orbit-a %) 0) orbit-b)) 1)]
+      (+ uniq-a uniq-b)))
+
+;;
+; Day 8
+;;
+
+(defn build-layer
+  "Build list of arrays of w * h dimension"
+  [w h input]
+  (map (fn [x] (take  w (drop (* w x) input))) (range h)))
+
+(build-layer 2 2 '(0 2 1 2))
+
+(defn build-matrix
+  "returns list (ll) of lists (layers) corresponsding with w (layer x) and h (layer y)
+  for example w = 3 h = 2
+  (
+    (
+       ( 0 1 2 )
+       ( 3 4 5 )
+    )
+    (  
+      ( 6 7 8 )
+      ( 9 0 1 )
+    )
+  )"
+  [w h input ll]
+    (if (< (count input) (* w h))
+     ll
+      (let [layer (build-layer w h input)
+            nxt-input (drop (* w h) input)
+            nxt-ll (if (= 0 (count ll)) (list layer) (conj ll layer))
+            ]
+        (build-matrix w h nxt-input nxt-ll))))
+
+(build-matrix 2 2 '(0 1 2 3 4 5 6 7 8 9 0 1) '())
+
+(defn get-day-8 [data w h]
+  (let [input (map #(Character/digit % 10) (vec data))
+        matrix (reverse (build-matrix w h input ()))
+        freqs (for [x matrix] (frequencies (flatten x)))
+        least-zeros (first (sort #(< (or (%1 0) -1) (or (%2 0) -1)) freqs ))
+        validation (* (get least-zeros 1) (get least-zeros 2))]
+    (println least-zeros validation)
+    validation))
+
+(defn day-8 []
+  (let [data (slurp "src/inputs/day-8.txt")]
+    (get-day-8 data 25 6)))
+
+;;
+; Day 8 -- Part 2
+;;
+(defn get-layer-value
+  "Use recursion to map over matrix and get final pixel values"
+  [w h matrix cur i]
+      (if (= (count matrix) (+ i 1))
+          (reverse cur)
+          (let [c (flatten cur)
+                nxt (flatten (nth matrix (+ i 1)))
+                adjusted-flat (for [i (range (count c))] (if (.contains '(0,1) (nth c i)) (nth c i) (nth nxt i)))
+                adjusted-layer (build-layer w h adjusted-flat )]
+                (get-layer-value w h matrix adjusted-layer (inc i)))))
+
+(defn graphix 
+  "VGA"
+  [matrix]
+    (for [line matrix] (str/join (into (newline) (map (fn [x] (cond (= x 1) "⬛️" (= x 0) "⬜️" :else " ")) (flatten line))))))
+
+(defn get-day-8-2 [data w h]
+  (let [input (map #(Character/digit % 10) (vec data))
+        matrix (build-matrix w h input '())
+        fixed (reverse matrix)] ; reverse the matrix I can't figure out what is wrong with build-matrix
+      (get-layer-value w h fixed (nth fixed 0) 0)
+    )
+  )
+
+(def test-data "0222112222120000")
+(graphix (get-day-8-2 test-data 2 2))
+(graphix (get-day-8-2  (slurp "src/inputs/day-8.txt") 25 6))
+
+(defn day-8-2-a []
+  (let [data (slurp "src/inputs/day-8.txt")]
+    (graphix (get-day-8-2 data 25 6))))
+
 (defn -main
   "Advent of Code -- 2019 https://adventofcode.com/2019/"
   []
@@ -274,4 +394,7 @@
   (day-4)
   (day-4-part-2)
   (day-6)
+  (day-6-2)
+  (day-8)
+  (day-8-2-a)
 )
